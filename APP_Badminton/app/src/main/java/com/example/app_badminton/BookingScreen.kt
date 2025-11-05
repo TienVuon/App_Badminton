@@ -2,9 +2,11 @@ package com.example.app_badminton
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,8 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -37,16 +42,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.app_badminton.R
 
-// KHÔNG CẦN KHAI BÁO LẠI CÁC MÀU SẮC CHUNG (PrimaryColor, AccentColor, ...)
-// NẾU CHÚNG ĐÃ ĐƯỢC KHAI BÁO TRONG CÙNG PACKAGE HOẶC FILE CHUNG KHÁC.
+// --- ĐỊNH NGHĨA HẰNG SỐ CHUNG TRONG OBJECT ---
+object ThemeConstants {
+    val PrimaryColor = Color(0xFF4CAF50) // Xanh lá
+    val AccentColor = Color(0xFFFF9800)  // Cam
+    val DarkTextColor = Color(0xFF212121)
+    val LightGreyBackground = Color(0xFFF7F7F7)
+    val CardBackgroundColor = Color(0xFFFFFFFF)
+    val PrimaryGradient = Brush.horizontalGradient(
+        colors = listOf(Color(0xFF66BB6A), Color(0xFF4CAF50)) // Gradient Xanh lá
+    )
+}
 
 data class Court(
     val name: String,
@@ -75,60 +92,40 @@ fun BookingScreen(navController: NavController) {
     }
 
     Scaffold(
-        containerColor = LightGreyBackground // SỬ DỤNG MÀU NỀN CHUNG
+        containerColor = ThemeConstants.LightGreyBackground,
+        topBar = { BookingTopBar(navController = navController) }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), // Thêm padding ngoài
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // --- 1. Header Nổi Bật ---
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "🗓️ ĐẶT SÂN NHANH 🗓️",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 28.sp,
-                        color = DarkTextColor, // SỬ DỤNG MÀU CHỮ ĐẬM CHUNG
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = "Chọn thời gian vàng, lên sân ngay!",
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            // --- 2. Thanh Tìm kiếm Hiện đại ---
+            // --- 1. Thanh Tìm kiếm Hiện đại (ĐÃ CẬP NHẬT) ---
             item {
                 OutlinedTextField(
                     value = searchText,
                     onValueChange = { searchText = it },
-                    label = { Text("Tìm kiếm tên sân, khu vực...") },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = "Tìm kiếm") },
+                    placeholder = { Text("Tìm kiếm sân cầu lông...") },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = "Tìm kiếm", tint = ThemeConstants.PrimaryColor) },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(25.dp), // Bo tròn hơn (Pro style)
+                    singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryColor, // SỬ DỤNG MÀU CHÍNH CHUNG
-                        unfocusedBorderColor = Color.LightGray,
-                        focusedLabelColor = PrimaryColor // SỬ DỤNG MÀU CHÍNH CHUNG
+                        focusedBorderColor = ThemeConstants.PrimaryColor,
+                        unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                        focusedLabelColor = ThemeConstants.PrimaryColor,
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        cursorColor = ThemeConstants.PrimaryColor
                     )
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // --- 3. Danh sách Sân (Court Cards) ---
+            // --- 2. Danh sách Sân (Court Cards) ---
             items(filteredCourts) { court ->
                 BookingCourtCard(court = court, navController = navController)
             }
@@ -140,91 +137,178 @@ fun BookingScreen(navController: NavController) {
     }
 }
 
-// --- Component Card Sân Cầu Lông Cho Màn Hình Đặt Lịch ---
+// -------------------------------------------------------------
+// --- COMPONENTS MỚI/CẬP NHẬT ---
+// -------------------------------------------------------------
+
+/**
+ * Component TopBar (Sử dụng Gradient và font Pro).
+ */
+@Composable
+fun BookingTopBar(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            // ✅ ĐỔI MỚI: Dùng Gradient cho Header
+            .background(ThemeConstants.PrimaryGradient)
+            .padding(vertical = 16.dp, horizontal = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // --- Nút Quay Lại ---
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.2f)) // Nổi bật nút trên nền Gradient
+                    .clickable { navController.popBackStack() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Quay lại",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            // --- Tiêu đề (Đã căn giữa) ---
+            Column(
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "LỊCH SÂN CẦU LÔNG", // Tiêu đề ngắn gọn, chuyên nghiệp hơn
+                    fontWeight = FontWeight.Black, // Font siêu đậm
+                    fontSize = 22.sp,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Đặt lịch theo thời gian thực",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+            }
+            // Spacer cân bằng
+            Spacer(modifier = Modifier.size(40.dp))
+        }
+    }
+}
+
+
+/**
+ * Component Card Sân Cầu Lông (Kiểu dáng Pro, hiện đại).
+ */
 @Composable
 fun BookingCourtCard(court: Court, navController: NavController) {
 
-    // Đảm bảo các màu sắc này được lấy từ các hằng số đã định nghĩa
     val statusColor = when (court.status) {
-        "Còn trống" -> PrimaryColor // Xanh lá
-        "Gần đầy" -> AccentColor  // Cam
-        "Đã đặt" -> Color.Red     // Đỏ
+        "Còn trống" -> ThemeConstants.PrimaryColor
+        "Gần đầy" -> ThemeConstants.AccentColor
+        "Đã đặt" -> Color.Red
         else -> Color.Gray
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
-        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor), // SỬ DỤNG MÀU NỀN CARD CHUNG
-        elevation = CardDefaults.cardElevation(8.dp)
+            .clickable {
+                if (court.status != "Đã đặt") {
+                    navController.navigate("court_booking_detail/${court.name}")
+                }
+            }
+            .clip(RoundedCornerShape(20.dp)), // ✅ Bo góc lớn hơn
+        colors = CardDefaults.cardColors(containerColor = ThemeConstants.CardBackgroundColor),
+        elevation = CardDefaults.cardElevation(10.dp) // ✅ Elevation cao hơn, bóng rõ nét hơn
     ) {
         Column {
             // Phần Ảnh Sân
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(180.dp)
             ) {
                 Image(
                     painter = painterResource(id = court.imageRes),
                     contentDescription = court.name,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
                     contentScale = ContentScale.Crop
                 )
-                // Label Trạng thái (Góc trên phải)
-                Text(
-                    text = court.status,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+
+                // ✅ THÔNG TIN TÊN SÂN VÀ KHOẢNG CÁCH NỔI BẬT TRÊN ẢNH
+                Row(
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(statusColor) // Màu Trạng thái linh hoạt
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                )
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .background(Color.Black.copy(alpha = 0.4f)) // Overlay tối
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = court.name,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.LocationOn, contentDescription = null, tint = ThemeConstants.AccentColor, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = court.distance,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ThemeConstants.AccentColor
+                        )
+                    }
+                }
             }
 
-            // Phần Thông tin và CTA
-            Column(
+            // Phần Trạng thái và CTA (Đã ĐƠN GIẢN HÓA)
+            Row(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Tên Sân
+                // Label Trạng thái (ĐÃ CHUYỂN VỀ DƯỚI)
                 Text(
-                    text = court.name,
+                    text = court.status,
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 18.sp,
-                    color = DarkTextColor, // SỬ DỤNG MÀU CHỮ ĐẬM CHUNG
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                // Khoảng cách
-                Text(
-                    text = "Cách bạn: ${court.distance}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                    fontSize = 16.sp,
+                    color = statusColor,
+                    modifier = Modifier
+                        .background(statusColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Nút Đặt Lịch
+                // Nút Đặt Lịch (ĐÃ CẬP NHẬT)
                 Button(
                     onClick = {
                         if (court.status != "Đã đặt") {
                             navController.navigate("court_booking_detail/${court.name}")
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    modifier = Modifier.height(48.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (court.status != "Đã đặt") PrimaryColor else Color.LightGray // SỬ DỤNG MÀU CHÍNH CHUNG
+                        containerColor = if (court.status != "Đã đặt") ThemeConstants.PrimaryColor else Color.LightGray
                     ),
                     enabled = court.status != "Đã đặt",
-                    shape = RoundedCornerShape(10.dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
@@ -235,7 +319,7 @@ fun BookingCourtCard(court: Court, navController: NavController) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (court.status != "Đã đặt") "CHỌN LỊCH VÀ ĐẶT NGAY" else "ĐÃ ĐẶT HẾT",
+                            text = if (court.status != "Đã đặt") "Đặt Ngay" else "Hết Sân", // Ngắn gọn hơn
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = Color.White

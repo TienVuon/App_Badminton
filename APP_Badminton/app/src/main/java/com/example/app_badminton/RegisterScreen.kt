@@ -41,14 +41,13 @@ import com.example.app_badminton.data.UserPreferences
 import kotlinx.coroutines.launch
 
 // --- Định nghĩa Màu sắc Mới (Đã đồng bộ) ---
-// *Đúng* đối tượng màu sắc để tham chiếu
 object LoginColors {
-    val PrimaryGreen = Color(0xFF4CAF50) // Xanh lá tươi
-    val AccentBlue = Color(0xFF1976D2)   // Xanh dương đậm
-    val LightBackground = Color(0xFFF5F5F5) // Nền nhẹ
-    val CardBackground = Color.White        // Nền thẻ
-    val ShadowColor = Color(0x33000000)     // Bóng đổ nhẹ
-    val DarkTextColor = Color(0xFF212121)   // Màu chữ tối (Sử dụng cho Text Style)
+    val PrimaryGreen = Color(0xFF4CAF50)
+    val AccentBlue = Color(0xFF1976D2)
+    val LightBackground = Color(0xFFF5F5F5)
+    val CardBackground = Color.White
+    val ShadowColor = Color(0x33000000)
+    val DarkTextColor = Color(0xFF212121)
 }
 
 @Composable
@@ -67,7 +66,6 @@ fun RegisterScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            // SỬA: Dùng LoginColors.LightBackground
             .background(LoginColors.LightBackground),
         contentAlignment = Alignment.Center
     ) {
@@ -76,19 +74,16 @@ fun RegisterScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                // Card Nền Trắng đồng bộ
                 .clip(RoundedCornerShape(16.dp))
-                // SỬA: Dùng LoginColors.CardBackground
                 .background(LoginColors.CardBackground)
                 .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                 .padding(24.dp)
         ) {
-            // 🏸 Tiêu đề đồng bộ
+
             Text(
                 text = "BADMINTON UTH",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.ExtraBold,
-                // SỬA: Dùng LoginColors.PrimaryGreen
                 color = LoginColors.PrimaryGreen
             )
             Text(
@@ -131,7 +126,7 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Nút đăng ký (Đồng bộ chiều cao, bo góc, bóng đổ)
+            // Nút đăng ký
             Button(
                 onClick = {
                     scope.launch {
@@ -142,8 +137,9 @@ fun RegisterScreen(navController: NavController) {
                             password != confirmPassword -> message = "Mật khẩu không khớp"
                             userPrefs.isUserExists(username) -> message = "Tên đăng nhập đã tồn tại"
                             else -> {
-                                // GỌI HÀM LOGIC (cần được định nghĩa trong UserPreferences)
-                                userPrefs.registerUser(username, password, fullName, phone)
+                                // ✅ SỬA LỖI: GỌI ĐÚNG HÀM saveUser VỚI ĐỦ 4 THAM SỐ
+                                userPrefs.saveUser(username, password, fullName, phone)
+
                                 message = "✅ Đăng ký thành công! Vui lòng đăng nhập."
                                 navController.navigate("login") { popUpTo("register") { inclusive = true } }
                             }
@@ -151,7 +147,6 @@ fun RegisterScreen(navController: NavController) {
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
-                // SỬA: Dùng LoginColors.PrimaryGreen
                 colors = ButtonDefaults.buttonColors(containerColor = LoginColors.PrimaryGreen),
                 shape = RoundedCornerShape(12.dp),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
@@ -164,7 +159,6 @@ fun RegisterScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = message,
-                    // SỬA: Dùng LoginColors.PrimaryGreen
                     color = if (message.startsWith("✅")) LoginColors.PrimaryGreen else Color.Red,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium
@@ -173,7 +167,7 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Liên kết chuyển sang đăng nhập (Màu Accent đồng bộ)
+            // Liên kết chuyển sang đăng nhập
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -184,7 +178,6 @@ fun RegisterScreen(navController: NavController) {
                 )
                 Text(
                     text = "Đăng nhập ngay",
-                    // SỬA: Dùng LoginColors.AccentBlue
                     color = LoginColors.AccentBlue,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
@@ -195,16 +188,6 @@ fun RegisterScreen(navController: NavController) {
     }
 }
 
-// **LƯU Ý QUAN TRỌNG:** Hàm này cần được định nghĩa trong UserPreferences.kt.
-// Tôi để nó ở đây để code có thể biên dịch nếu bạn chưa định nghĩa, nhưng nó sẽ không chạy logic.
-private fun UserPreferences.registerUser(
-    username: String,
-    password: String,
-    fullName: String,
-    phone: String
-) {
-    // Vui lòng định nghĩa hàm logic này trong UserPreferences.kt
-}
 
 /**
  * Hàm Composable helper để tạo OutlinedTextField đồng bộ về phong cách.
@@ -227,14 +210,11 @@ fun StyledOutlinedTextField(
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         colors = OutlinedTextFieldDefaults.colors(
-            // SỬA: Dùng LoginColors.AccentBlue
             focusedBorderColor = LoginColors.AccentBlue,
             unfocusedBorderColor = Color.LightGray,
-            // SỬA: Dùng LoginColors.AccentBlue
             focusedLabelColor = LoginColors.AccentBlue,
             unfocusedLabelColor = Color.Gray
         ),
-        // SỬA: Dùng LoginColors.DarkTextColor
         textStyle = LocalTextStyle.current.copy(color = LoginColors.DarkTextColor)
     )
 }
