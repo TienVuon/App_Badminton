@@ -13,8 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -32,19 +37,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+// Giả định bạn có file UserPreferences.kt
 import com.example.app_badminton.data.UserPreferences
 import kotlinx.coroutines.launch
 
-// --- Định nghĩa Màu sắc Mới (Inspired by Badminton Energy) ---
+// Định nghĩa Màu sắc
 object LoginScreen {
-    val PrimaryGreen = Color(0xFF4CAF50) // Xanh lá tươi
-    val AccentBlue = Color(0xFF1976D2)   // Xanh dương đậm
-    val LightBackground = Color(0xFFF5F5F5) // Nền nhẹ
-    val CardBackground = Color.White        // Nền thẻ
-    val ShadowColor = Color(0x33000000)     // Bóng đổ nhẹ
+    val PrimaryGreen = Color(0xFF4CAF50)
+    val AccentBlue = Color(0xFF1976D2)
+    val LightBackground = Color(0xFFF5F5F5)
+    val CardBackground = Color.White
 }
 
 @Composable
@@ -56,11 +62,12 @@ fun LoginScreen(navController: NavController) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LoginScreen.LightBackground), // Nền nhẹ
+            .background(LoginScreen.LightBackground),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -68,78 +75,46 @@ fun LoginScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
-                // Card Nền Trắng với Bo Góc và Bóng Đổ
                 .clip(RoundedCornerShape(16.dp))
                 .background(LoginScreen.CardBackground)
                 .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                 .padding(24.dp)
         ) {
-            // 🏸 Tiêu đề (Lớn hơn, màu Primary)
-            Text(
-                text = "BADMINTON UTH",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = LoginScreen.PrimaryGreen
-            )
-            Text(
-                text = "ĐĂNG NHẬP",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Gray
-            )
+            Text(text = "BADMINTON UTH", fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, color = LoginScreen.PrimaryGreen)
+            Text(text = "ĐĂNG NHẬP", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = Color.Gray)
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Ô nhập tên đăng nhập
             OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Tên đăng nhập") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp), // Bo góc cho Input
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = LoginScreen.AccentBlue,
-                    unfocusedBorderColor = Color.LightGray,
-                    focusedLabelColor = LoginScreen.AccentBlue,
-                )
+                value = username, onValueChange = { username = it }, label = { Text("Tên đăng nhập") },
+                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LoginScreen.AccentBlue, unfocusedBorderColor = Color.LightGray, focusedLabelColor = LoginScreen.AccentBlue)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Ô nhập mật khẩu
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Mật khẩu") },
-                visualTransformation = PasswordVisualTransformation(),
+                value = password, onValueChange = { password = it }, label = { Text("Mật khẩu") },
+                // Logic hiển thị/ẩn mật khẩu
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp), // Bo góc cho Input
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = LoginScreen.AccentBlue,
-                    unfocusedBorderColor = Color.LightGray,
-                    focusedLabelColor = LoginScreen.AccentBlue,
-                )
+                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = LoginScreen.AccentBlue, unfocusedBorderColor = Color.LightGray, focusedLabelColor = LoginScreen.AccentBlue),
+                // Icon Mắt
+                trailingIcon = {
+                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(imageVector = image, contentDescription = if (passwordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu")
+                    }
+                }
             )
 
-            // Liên kết quên mật khẩu (chuyển lên trên nút Đăng nhập)
             Box(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.CenterEnd) {
-                Text(
-                    text = "Quên mật khẩu?",
-                    color = Color.Gray,
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable {
-                        message = "Tính năng đang được phát triển"
-                    }
-                )
+                Text(text = "Quên mật khẩu?", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.clickable { message = "Tính năng đang được phát triển" })
             }
-
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Nút đăng nhập (Màu Primary, Bo góc, Chiều cao lớn)
             Button(
                 onClick = {
                     scope.launch {
@@ -147,10 +122,7 @@ fun LoginScreen(navController: NavController) {
                             val success = userPrefs.validateUser(username, password)
                             if (success) {
                                 message = ""
-                                // Chuyển sang Home khi đăng nhập đúng
-                                navController.navigate("home") {
-                                    popUpTo("login") { inclusive = true }
-                                }
+                                navController.navigate("home_screen") { popUpTo("login_screen") { inclusive = true } }
                             } else {
                                 message = "Sai tên đăng nhập hoặc mật khẩu!"
                             }
@@ -159,45 +131,23 @@ fun LoginScreen(navController: NavController) {
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().height(56.dp), // Tăng chiều cao
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = LoginScreen.PrimaryGreen),
-                shape = RoundedCornerShape(12.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp) // Thêm bóng đổ
+                shape = RoundedCornerShape(12.dp), elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
                 Text("ĐĂNG NHẬP", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
 
-            // Hiển thị thông báo lỗi
             if (message.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = message,
-                    color = Color.Red,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Text(text = message, color = Color.Red, fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Liên kết chuyển sang đăng ký (Màu Accent)
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Chưa có tài khoản? ",
-                    color = Color.Gray,
-                    fontSize = 16.sp,
-                )
-                Text(
-                    text = "Đăng ký ngay",
-                    color = LoginScreen.AccentBlue, // Màu nhấn mạnh
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable {
-                        navController.navigate("register")
-                    }
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "Chưa có tài khoản? ", color = Color.Gray, fontSize = 16.sp)
+                Text(text = "Đăng ký ngay", color = LoginScreen.AccentBlue, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { navController.navigate("register_screen") })
             }
         }
     }

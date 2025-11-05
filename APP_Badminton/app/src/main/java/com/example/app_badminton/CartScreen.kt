@@ -206,12 +206,14 @@ fun BottomNavigationBar(navController: NavController) {
                     )
                 },
                 label = {
-                    Text(
-                        text = item.label,
-                        fontSize = 12.sp,
-                        color = if (currentRoute == item.route)
-                            Color(0xFF009688) else Color.Gray
-                    )
+                    item.label?.let {
+                        Text(
+                            text = it,
+                            fontSize = 12.sp,
+                            color = if (currentRoute == item.route)
+                                Color(0xFF009688) else Color.Gray
+                        )
+                    }
                 }
             )
         }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,8 +21,8 @@ fun AppNavGraph() {
 
     Scaffold(
         bottomBar = {
-            // 🔹 Chỉ hiển thị thanh công cụ nếu không phải Login hoặc Register
-            if (currentRoute !in listOf("login", "register")) {
+            // Chỉ hiển thị thanh công cụ nếu không phải Login hoặc Register
+            if (currentRoute !in listOf("login_screen", "register_screen")) {
                 BottomNavigationBar(navController)
             }
         }
@@ -29,21 +30,22 @@ fun AppNavGraph() {
 
         NavHost(
             navController = navController,
-            startDestination = "login",
+            startDestination = "login_screen", // Bắt đầu từ Login
             modifier = Modifier.padding(innerPadding)
         ) {
 
-            // ❌ Không có thanh công cụ
-            composable("login") { LoginScreen(navController = navController) }
-            composable("register") { RegisterScreen(navController = navController) }
+            // Màn hình không có Bottom Nav
+            composable("login_screen") { LoginScreen(navController = navController) }
+            composable("register_screen") { RegisterScreen(navController = navController) }
 
-            // ✅ Có thanh công cụ
-            composable("home") { HomeScreen(navController = navController) }
-            composable("cart") { CartScreen(navController = navController) }
-            composable("profile") { ProfileScreen(navController = navController) }
-            composable("booking") { BookingScreen(navController = navController) }
+            // Màn hình có Bottom Nav
+            composable("home_screen") { HomeScreen(navController = navController) }
+            composable("cart_screen") { CartScreen(navController = navController) }
+            composable("profile_screen") { ProfileScreen(navController = navController) }
+            composable("booking_screen") { BookingScreen(navController = navController) }
+            composable("service_screen") { ServiceScreen(navController = navController) } // Dịch vụ
 
-            // ✅ Chuyển động theo sân cụ thể — truyền courtName
+            // Chuyển động chi tiết (cần các Composable tương ứng)
             composable(
                 route = "court_booking_detail/{courtName}",
                 arguments = listOf(navArgument("courtName") { type = NavType.StringType })
@@ -52,10 +54,14 @@ fun AppNavGraph() {
                 CourtBookingDetailScreen(navController = navController, courtName = courtName)
             }
 
-            // ✅ Trang thanh toán
-            composable("payment") {
+            composable("payment_screen") {
                 PaymentScreen(navController = navController)
             }
         }
     }
+}
+
+@Composable
+fun ServiceScreen(navController: NavHostController) {
+    TODO("Not yet implemented")
 }

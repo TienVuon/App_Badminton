@@ -17,6 +17,8 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem.Booking,
         BottomNavItem.Cart,
         BottomNavItem.Profile
+        // Lưu ý: Item Service thường không đặt ở Bottom Bar mà dùng FAB, nhưng nếu cần:
+        // BottomNavItem.Service
     )
 
 
@@ -29,12 +31,19 @@ fun BottomNavigationBar(navController: NavController) {
                 selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {
-                        popUpTo("home") { inclusive = false }
+                        // SỬA: Dùng startDestination ID để popUpTo (hoặc route "login_screen")
+                        // Điều này đảm bảo PopUpTo tìm thấy route khởi đầu hợp lệ
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+
+                        // Tránh tạo nhiều bản sao của màn hình
                         launchSingleTop = true
+                        restoreState = true
                     }
                 },
-                icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label, fontSize = MaterialTheme.typography.labelSmall.fontSize) }
+                icon = { Icon(item.icon, contentDescription = item.title) },
+                label = { Text(item.title, fontSize = MaterialTheme.typography.labelSmall.fontSize) }
             )
         }
     }
