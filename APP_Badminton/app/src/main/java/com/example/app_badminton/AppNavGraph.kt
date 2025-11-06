@@ -1,7 +1,10 @@
 package com.example.app_badminton
 
+import android.util.Log
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -33,7 +36,6 @@ fun AppNavGraph() {
             startDestination = "login_screen", // Bắt đầu từ Login
             modifier = Modifier.padding(innerPadding)
         ) {
-
             // Màn hình không có Bottom Nav
             composable("login_screen") { LoginScreen(navController = navController) }
             composable("register_screen") { RegisterScreen(navController = navController) }
@@ -43,7 +45,14 @@ fun AppNavGraph() {
             composable("cart_screen") { CartScreen(navController = navController) }
             composable("profile_screen") { ProfileScreen(navController = navController) }
             composable("booking_screen") { BookingScreen(navController = navController) }
-            composable("service_screen") { ServiceScreen(navController = navController) } // Dịch vụ
+
+            // Gọi Composable Service Screen chính
+            composable("service_screen") { ServiceScreen(navController = navController) }
+
+            // Routes dịch vụ con
+            composable("food_screen") { FoodScreen(navController = navController) }
+            composable("drinks_screen") { DrinksScreen(navController = navController) }
+            composable("other_service_screen") { OtherServiceScreen(navController = navController) }
 
             // Chuyển động chi tiết (cần các Composable tương ứng)
             composable(
@@ -61,7 +70,3 @@ fun AppNavGraph() {
     }
 }
 
-@Composable
-fun ServiceScreen(navController: NavHostController) {
-    TODO("Not yet implemented")
-}

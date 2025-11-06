@@ -12,14 +12,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * Danh sách các nút trong thanh điều hướng dưới (Bottom Navigation)
  */
 sealed class BottomNavItem(
-    val route: String, // <--- ĐÃ THÊM DẤU PHẨY (,)
+    val route: String,
     val title: String,
     val icon: ImageVector
 ) {
-    val label: String?
-        get() {
-            TODO()
-        }
+    // ✅ FIX: Thay thế TODO() bằng cách trả về title, tránh lỗi NotImplementedError
+    val label: String
+        get() = title
 
     object Home : BottomNavItem(
         route = "home_screen",

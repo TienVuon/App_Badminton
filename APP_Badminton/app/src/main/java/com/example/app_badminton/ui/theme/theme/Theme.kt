@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF009688),
+    primary = Color(0xFF4CAF50), // Màu xanh lá cây
     secondary = Color(0xFF80CBC4),
     background = Color(0xFFF1FDFB),
     surface = Color.White,
@@ -20,6 +20,7 @@ private val LightColors = lightColorScheme(
 fun AppBabmintonTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColors,
+        typography = MaterialTheme.typography,
         content = content
     )
 }

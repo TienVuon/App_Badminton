@@ -60,7 +60,6 @@ object ThemeColors {
     val SuperAccentColor = Color(0xFFF44336)
 }
 
-
 @Composable
 fun CourtBookingDetailScreen(
     navController: NavController,
@@ -215,7 +214,7 @@ fun CourtBookingDetailScreen(
 
     // Hộp thoại xác nhận & thanh toán
     if (showConfirmDialog) {
-        val totalCost = 0
+        val totalCost = selectedBookings.values.sumOf { it.size * 100000 } // ✅ Tính đúng tổng tiền
         BookingConfirmDialog(
             courtName = courtName,
             selectedBookings = selectedBookings, // ✅ TRUYỀN TOÀN BỘ MAP
@@ -278,7 +277,6 @@ fun getTodayDateFormatted(): String {
 
 @Composable
 fun DateChip(date: DateItem, isSelected: Boolean, hasSelectedSlots: Boolean, onDateSelected: (DateItem) -> Unit) {
-    // ✅ THAY ĐỔI: Thêm hasSelectedSlots để hiển thị trạng thái đã chọn
     val backgroundColor = when {
         isSelected -> ThemeColors.SelectedTimeColor // Ngày đang xem
         hasSelectedSlots -> ThemeColors.PrimaryGreen // Ngày đã chọn slot nhưng không phải ngày đang xem
