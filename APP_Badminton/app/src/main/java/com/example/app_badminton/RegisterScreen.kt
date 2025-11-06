@@ -13,8 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -40,7 +45,7 @@ import androidx.navigation.NavController
 import com.example.app_badminton.data.UserPreferences
 import kotlinx.coroutines.launch
 
-// --- Định nghĩa Màu sắc Mới (Đã đồng bộ) ---
+// --- MÀU CHỦ ĐỀ ---
 object LoginColors {
     val PrimaryGreen = Color(0xFF4CAF50)
     val AccentBlue = Color(0xFF1976D2)
@@ -79,7 +84,6 @@ fun RegisterScreen(navController: NavController) {
                 .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                 .padding(24.dp)
         ) {
-
             Text(
                 text = "BADMINTON UTH",
                 fontSize = 36.sp,
@@ -95,7 +99,6 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- CÁC TRƯỜNG NHẬP LIỆU ---
             StyledOutlinedTextField(value = username, onValueChange = { username = it }, label = "Tên đăng nhập")
             Spacer(modifier = Modifier.height(12.dp))
             StyledOutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = "Họ và tên")
@@ -103,13 +106,14 @@ fun RegisterScreen(navController: NavController) {
             StyledOutlinedTextField(
                 value = phone,
                 onValueChange = {
-                    // Chỉ cho phép nhập số và giới hạn 10 ký tự
                     if (it.length <= 10) phone = it
                 },
                 label = "Số điện thoại",
                 keyboardType = KeyboardType.Phone
             )
             Spacer(modifier = Modifier.height(12.dp))
+
+            // Mật khẩu có nút ẩn/hiện
             StyledOutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -126,7 +130,6 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Nút đăng ký
             Button(
                 onClick = {
                     scope.launch {
@@ -137,11 +140,11 @@ fun RegisterScreen(navController: NavController) {
                             password != confirmPassword -> message = "Mật khẩu không khớp"
                             userPrefs.isUserExists(username) -> message = "Tên đăng nhập đã tồn tại"
                             else -> {
-                                // ✅ SỬA LỖI: GỌI ĐÚNG HÀM saveUser VỚI ĐỦ 4 THAM SỐ
                                 userPrefs.saveUser(username, password, fullName, phone)
-
                                 message = "✅ Đăng ký thành công! Vui lòng đăng nhập."
-                                navController.navigate("login") { popUpTo("register") { inclusive = true } }
+                                navController.navigate("login_screen") {
+                                    popUpTo("register_screen") { inclusive = true }
+                                }
                             }
                         }
                     }
@@ -154,7 +157,6 @@ fun RegisterScreen(navController: NavController) {
                 Text("ĐĂNG KÝ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
 
-            // Hiển thị thông báo
             if (message.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -167,15 +169,8 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Liên kết chuyển sang đăng nhập
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Đã có tài khoản? ",
-                    color = Color.Gray,
-                    fontSize = 16.sp,
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Đã có tài khoản? ", color = Color.Gray, fontSize = 16.sp)
                 Text(
                     text = "Đăng nhập ngay",
                     color = LoginColors.AccentBlue,
@@ -188,9 +183,8 @@ fun RegisterScreen(navController: NavController) {
     }
 }
 
-
 /**
- * Hàm Composable helper để tạo OutlinedTextField đồng bộ về phong cách.
+ * OutlinedTextField có thêm nút con mắt để ẩn/hiện mật khẩu
  */
 @Composable
 fun StyledOutlinedTextField(
@@ -200,6 +194,8 @@ fun StyledOutlinedTextField(
     isPassword: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
+    var passwordVisible by remember { mutableStateOf(false) }
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -207,8 +203,18 @@ fun StyledOutlinedTextField(
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        trailingIcon = {
+            if (isPassword) {
+                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                val description = if (passwordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu"
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = description, tint = LoginColors.AccentBlue)
+                }
+            }
+        },
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = LoginColors.AccentBlue,
             unfocusedBorderColor = Color.LightGray,
