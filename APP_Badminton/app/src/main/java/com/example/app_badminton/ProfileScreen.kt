@@ -52,13 +52,12 @@ import com.example.app_badminton.data.User
 import com.example.app_badminton.data.UserPreferences
 import kotlinx.coroutines.launch
 
-// --- APPCOLORS (Không đổi) ---
+// --- APP COLORS ---
 object AppColors {
     val PrimaryColor = Color(0xFF4CAF50)
     val AccentColor = Color(0xFFFF9800)
     val DarkTextColor = Color(0xFF212121)
     val LightGreyBackground = Color(0xFFF7F7F7)
-
     val RedStrong = Color(0xFFFF5252)
     val RedDark = Color(0xFFD32F2F)
 
@@ -102,6 +101,7 @@ fun ProfileScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            // --- TIÊU ĐỀ ---
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -113,8 +113,7 @@ fun ProfileScreen(navController: NavController) {
                 )
             }
 
-            // --- AVATAR ITEM (SỬA CHI TIẾT AVATAR BẰNG CÁCH DÙNG BOX NỀN) ---
-            // --- AVATAR ITEM (TỐI ƯU HOÁ THẨM MỸ) ---
+            // --- AVATAR ---
             item {
                 val avatarSize = 130.dp
                 Box(
@@ -137,19 +136,17 @@ fun ProfileScreen(navController: NavController) {
                         .clickable(enabled = editMode) { imagePicker.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
-                    // ẢNH NẰM GIỮA KHUNG TRÒN, TỈ LỆ CHUẨN
                     if (current.avatarUri.isNotEmpty()) {
                         Image(
                             painter = rememberAsyncImagePainter(current.avatarUri),
                             contentDescription = "Avatar",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .size(avatarSize - 8.dp) // tạo khoảng cách nhỏ để thấy viền đẹp hơn
+                                .size(avatarSize - 8.dp)
                                 .clip(CircleShape)
                                 .align(Alignment.Center)
                         )
                     } else {
-                        // NẾU CHƯA CÓ ẢNH → HIỆN CHỮ CÁI ĐẦU
                         Box(
                             modifier = Modifier
                                 .size(avatarSize - 8.dp)
@@ -166,7 +163,6 @@ fun ProfileScreen(navController: NavController) {
                         }
                     }
 
-                    // ICON CAMERA
                     if (editMode) {
                         Box(
                             modifier = Modifier
@@ -190,8 +186,7 @@ fun ProfileScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-
-            // --- TÊN NGƯỜI DÙNG VÀ KHOẢNG CÁCH ---
+            // --- TÊN NGƯỜI DÙNG ---
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -203,22 +198,17 @@ fun ProfileScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
-            // --- CÁC TRƯỜNG THÔNG TIN ---
-            item { ProfileInputField(label = "Họ và tên", value = current.fullName, onValueChange = { user = current.copy(fullName = it) }, editMode = editMode) }
-            item { ProfileInputField(label = "Giới tính", value = current.gender, onValueChange = { user = current.copy(gender = it) }, editMode = editMode) }
-            item { ProfileInputField(label = "Số điện thoại", value = current.phone, onValueChange = { user = current.copy(phone = it) }, editMode = editMode) }
-            item { ProfileInputField(label = "Địa chỉ", value = current.address, onValueChange = { user = current.copy(address = it) }, editMode = editMode) }
+            // --- THÔNG TIN NGƯỜI DÙNG ---
+            item { ProfileInputField("Họ và tên", current.fullName, { user = current.copy(fullName = it) }, editMode) }
+            item { ProfileInputField("Giới tính", current.gender, { user = current.copy(gender = it) }, editMode) }
+            item { ProfileInputField("Số điện thoại", current.phone, { user = current.copy(phone = it) }, editMode) }
+            item { ProfileInputField("Địa chỉ", current.address, { user = current.copy(address = it) }, editMode) }
             item {
-                ProfileInputField(
-                    label = "Email",
-                    value = current.email,
-                    onValueChange = { user = current.copy(email = it) },
-                    editMode = editMode
-                )
+                ProfileInputField("Email", current.email, { user = current.copy(email = it) }, editMode)
                 Spacer(modifier = Modifier.height(32.dp))
             }
 
-            // --- NÚT HÀNH ĐỘNG SỬA/LƯU ---
+            // --- NÚT SỬA / LƯU ---
             item {
                 if (!editMode) {
                     Button(
@@ -233,7 +223,15 @@ fun ProfileScreen(navController: NavController) {
                     Button(
                         onClick = {
                             scope.launch {
-                                prefs.updateUserProfile(current.username, current.fullName, current.gender, current.phone, current.address, current.email, current.avatarUri)
+                                prefs.updateUserProfile(
+                                    current.username,
+                                    current.fullName,
+                                    current.gender,
+                                    current.phone,
+                                    current.address,
+                                    current.email,
+                                    current.avatarUri
+                                )
                                 message = "✅ Đã lưu thay đổi!"
                                 editMode = false
                             }
@@ -261,19 +259,26 @@ fun ProfileScreen(navController: NavController) {
                 }
             }
 
-            // --- NÚT ĐĂNG XUẤT (Đã fix) ---
+            // --- NÚT ĐĂNG XUẤT (ĐÃ FIX) ---
             item {
                 Spacer(modifier = Modifier.height(24.dp))
                 OutlinedButton(
                     onClick = {
                         scope.launch {
                             prefs.logout()
-                            navController.navigate("login") { popUpTo("home") { inclusive = true } }
+                            // ✅ Quay về login_screen và xóa toàn bộ back stack
+                            navController.navigate("login_screen") {
+                                popUpTo(0)
+                                launchSingleTop = true
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(60.dp),
                     border = BorderStroke(2.dp, AppColors.GradientLogoutButton),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.RedDark, containerColor = Color.Transparent),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = AppColors.RedDark,
+                        containerColor = Color.Transparent
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("ĐĂNG XUẤT", fontWeight = FontWeight.Bold, fontSize = 15.sp)
@@ -284,7 +289,7 @@ fun ProfileScreen(navController: NavController) {
     }
 }
 
-// --- ProfileInputField (Không đổi) ---
+// --- INPUT FIELD ---
 @Composable
 fun ProfileInputField(
     label: String,
