@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.map
 import org.json.JSONArray
 import org.json.JSONObject
 
-// ✅ Tạo DataStore riêng cho người dùng
+// ✅ Khởi tạo DataStore dành riêng cho user
 val Context.dataStore by preferencesDataStore(name = "user_prefs")
 
 // ✅ Model người dùng
@@ -32,31 +32,30 @@ class UserPreferences(private val context: Context) {
     }
 
     /**
-     * ✅ LƯU NGƯỜI DÙNG MỚI (ĐĂNG KÝ) - Đã Cập Nhật 4 Tham Số
+     * ✅ Đăng ký người dùng mới (4 tham số)
      */
     suspend fun saveUser(
         username: String,
         password: String,
-        fullName: String, // <--- THÊM
-        phone: String     // <--- THÊM
+        fullName: String,
+        phone: String
     ) {
         context.dataStore.edit { prefs ->
             val jsonArray = JSONArray(prefs[USERS_KEY] ?: "[]")
 
-            // Kiểm tra trùng username (không phân biệt hoa thường)
+            // Kiểm tra trùng username
             for (i in 0 until jsonArray.length()) {
                 val user = jsonArray.getJSONObject(i)
                 if (user.getString("username").equals(username, ignoreCase = true)) {
-                    return@edit // Nếu đã tồn tại thì bỏ qua
+                    return@edit
                 }
             }
 
-            // Tạo user mới với thông tin đầy đủ
             val newUser = JSONObject().apply {
                 put("username", username.trim())
                 put("password", password.trim())
-                put("fullName", fullName.trim()) // <--- LƯU fullName
-                put("phone", phone.trim())       // <--- LƯU phone
+                put("fullName", fullName.trim())
+                put("phone", phone.trim())
                 put("gender", "")
                 put("address", "")
                 put("email", "")
@@ -66,12 +65,14 @@ class UserPreferences(private val context: Context) {
             jsonArray.put(newUser)
             prefs[USERS_KEY] = jsonArray.toString()
 
-            // Tự động đăng nhập sau khi đăng ký
+            // Lưu trạng thái đăng nhập
             prefs[LOGGED_USER_KEY] = username.trim()
         }
     }
 
-    // ✅ Cập nhật thông tin hồ sơ người dùng
+    /**
+     * ✅ Cập nhật thông tin hồ sơ người dùng
+     */
     suspend fun updateUserProfile(
         username: String,
         fullName: String,
@@ -100,7 +101,9 @@ class UserPreferences(private val context: Context) {
         }
     }
 
-    // ✅ Lấy toàn bộ danh sách người dùng trong DataStore
+    /**
+     * ✅ Lấy toàn bộ người dùng
+     */
     private suspend fun getAllUsers(): List<User> {
         val jsonText = context.dataStore.data.map { it[USERS_KEY] ?: "[]" }.first()
         val jsonArray = JSONArray(jsonText)
@@ -124,47 +127,40 @@ class UserPreferences(private val context: Context) {
         return list
     }
 
-    // ✅ Kiểm tra tài khoản đăng nhập (Validate)
+    /**
+     * ✅ Kiểm tra đăng nhập
+     */
     suspend fun validateUser(username: String, password: String): Boolean {
         val users = getAllUsers()
         val match = users.any {
-            it.username.trim().equals(username.trim(), ignoreCase = true) &&
-                    it.password.trim() == password.trim()
+            it.username.trim().equals(username.trim(), ignoreCase = true)
+                    && it.password.trim() == password.trim()
         }
-        if (match) setLoggedInUser(username.trim()) // Lưu trạng thái đăng nhập khi validate thành công
+        if (match) setLoggedInUser(username.trim())
         return match
     }
 
-    // ✅ Kiểm tra user đã tồn tại
+    /**
+     * ✅ Kiểm tra user tồn tại
+     */
     suspend fun isUserExists(username: String): Boolean {
         return getAllUsers().any { it.username.equals(username, ignoreCase = true) }
     }
 
-    // ✅ Lưu thông tin user đang đăng nhập
-    suspend fun setLoggedInUser(username: String) {
-        context.dataStore.edit { prefs -> prefs[LOGGED_USER_KEY] = username }
-    }
-
-    // ✅ Lấy thông tin user đang đăng nhập
-    suspend fun getLoggedInUser(): User? {
-        val loggedUser = context.dataStore.data.map { it[LOGGED_USER_KEY] }.first() ?: return null
-        return getAllUsers().find { it.username.equals(loggedUser, ignoreCase = true) }
-    }
-
-    // ✅ Đăng xuất
-    suspend fun logout() {
-        context.dataStore.edit { prefs ->
-            prefs.remove(LOGGED_USER_KEY)
+    /**
+     * ✅ Kiểm tra xác thực username + phone (phục vụ Quên mật khẩu)
+     */
+    suspend fun verifyUserByPhone(username: String, phone: String): Boolean {
+        val users = getAllUsers()
+        return users.any {
+            it.username.trim().equals(username.trim(), ignoreCase = true)
+                    && it.phone.trim() == phone.trim()
         }
     }
 
-    // ✅ Tìm người dùng theo số điện thoại
-    suspend fun findUserByPhone(phone: String): User? {
-        val users = getAllUsers()
-        return users.find { it.phone.trim() == phone.trim() && it.phone.isNotEmpty() }
-    }
-
-    // ✅ Cập nhật mật khẩu mới
+    /**
+     * ✅ Cập nhật mật khẩu mới
+     */
     suspend fun updatePassword(username: String, newPassword: String) {
         context.dataStore.edit { prefs ->
             val jsonArray = JSONArray(prefs[USERS_KEY] ?: "[]")
@@ -177,6 +173,38 @@ class UserPreferences(private val context: Context) {
             }
 
             prefs[USERS_KEY] = jsonArray.toString()
+        }
+    }
+
+    /**
+     * ✅ Lấy người dùng theo SĐT (nếu cần cho xác thực)
+     */
+    suspend fun findUserByPhone(phone: String): User? {
+        val users = getAllUsers()
+        return users.find { it.phone.trim() == phone.trim() }
+    }
+
+    /**
+     * ✅ Lưu trạng thái đăng nhập
+     */
+    suspend fun setLoggedInUser(username: String) {
+        context.dataStore.edit { prefs -> prefs[LOGGED_USER_KEY] = username }
+    }
+
+    /**
+     * ✅ Lấy user đang đăng nhập
+     */
+    suspend fun getLoggedInUser(): User? {
+        val loggedUser = context.dataStore.data.map { it[LOGGED_USER_KEY] }.first() ?: return null
+        return getAllUsers().find { it.username.equals(loggedUser, ignoreCase = true) }
+    }
+
+    /**
+     * ✅ Đăng xuất
+     */
+    suspend fun logout() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(LOGGED_USER_KEY)
         }
     }
 }

@@ -40,6 +40,7 @@ fun AppNavGraph() {
             composable("login_screen") { LoginScreen(navController = navController) }
             composable("register_screen") { RegisterScreen(navController = navController) }
 
+            composable("forgot_password") { ForgotPasswordScreen(navController = navController) }
             // Màn hình có Bottom Nav
             composable("home_screen") { HomeScreen(navController = navController) }
             composable("cart_screen") { CartScreen(navController = navController) }

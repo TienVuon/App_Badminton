@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -110,7 +111,20 @@ fun LoginScreen(navController: NavController) {
             )
 
             Box(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.CenterEnd) {
-                Text(text = "Quên mật khẩu?", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.clickable { message = "Tính năng đang được phát triển" })
+                // trong cột nội dung login, thêm (sau password field, trước nút đăng nhập hoặc cạnh nó)
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Quên mật khẩu?",
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .clickable { navController.navigate("forgot_password") }
+                            .padding(end = 8.dp, top = 8.dp)
+                    )
+                }
+
             }
 
             Spacer(modifier = Modifier.height(24.dp))
