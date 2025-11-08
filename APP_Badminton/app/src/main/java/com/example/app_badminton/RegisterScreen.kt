@@ -3,33 +3,14 @@ package com.example.app_badminton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,129 +36,137 @@ object LoginColors {
     val DarkTextColor = Color(0xFF212121)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(navController: NavController) {
     val context = LocalContext.current
     val userPrefs = remember { UserPreferences(context) }
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var fullName by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var message by remember { mutableStateOf("") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(LoginColors.LightBackground),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(LoginColors.CardBackground)
-                .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-                .padding(24.dp)
+                .padding(paddingValues)
+                .fillMaxSize()
+                .background(LoginColors.LightBackground),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "BADMINTON UTH",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = LoginColors.PrimaryGreen
-            )
-            Text(
-                text = "TẠO TÀI KHOẢN MỚI",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Gray
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(LoginColors.CardBackground)
+                    .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "BADMINTON UTH",
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = LoginColors.PrimaryGreen
+                )
+                Text(
+                    text = "TẠO TÀI KHOẢN MỚI",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Gray
+                )
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            StyledOutlinedTextField(value = username, onValueChange = { username = it }, label = "Tên đăng nhập")
-            Spacer(modifier = Modifier.height(12.dp))
-            StyledOutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = "Họ và tên")
-            Spacer(modifier = Modifier.height(12.dp))
-            StyledOutlinedTextField(
-                value = phone,
-                onValueChange = {
-                    if (it.length <= 10) phone = it
-                },
-                label = "Số điện thoại",
-                keyboardType = KeyboardType.Phone
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+                StyledOutlinedTextField(value = username, onValueChange = { username = it }, label = "Tên đăng nhập")
+                Spacer(modifier = Modifier.height(12.dp))
+                StyledOutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = "Họ và tên")
+                Spacer(modifier = Modifier.height(12.dp))
+                StyledOutlinedTextField(
+                    value = phone,
+                    onValueChange = {
+                        if (it.length <= 10) phone = it
+                    },
+                    label = "Số điện thoại",
+                    keyboardType = KeyboardType.Phone
+                )
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // Mật khẩu có nút ẩn/hiện
-            StyledOutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = "Mật khẩu",
-                isPassword = true
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            StyledOutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = "Nhập lại mật khẩu",
-                isPassword = true
-            )
+                StyledOutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Mật khẩu",
+                    isPassword = true
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                StyledOutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = "Nhập lại mật khẩu",
+                    isPassword = true
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    scope.launch {
-                        when {
-                            username.isBlank() || password.isBlank() || fullName.isBlank() || phone.isBlank() -> message = "Vui lòng nhập đầy đủ thông tin"
-                            !phone.matches(Regex("^\\d{10}$")) -> message = "Số điện thoại phải là 10 chữ số"
-                            password.length < 6 -> message = "Mật khẩu phải có ít nhất 6 ký tự"
-                            password != confirmPassword -> message = "Mật khẩu không khớp"
-                            userPrefs.isUserExists(username) -> message = "Tên đăng nhập đã tồn tại"
-                            else -> {
-                                userPrefs.saveUser(username, password, fullName, phone)
-                                message = "✅ Đăng ký thành công! Vui lòng đăng nhập."
-                                navController.navigate("login_screen") {
-                                    popUpTo("register_screen") { inclusive = true }
+                Button(
+                    onClick = {
+                        scope.launch {
+                            when {
+                                username.isBlank() || password.isBlank() || fullName.isBlank() || phone.isBlank() -> {
+                                    snackbarHostState.showSnackbar("⚠️ Vui lòng nhập đầy đủ thông tin")
+                                }
+                                !phone.matches(Regex("^\\d{10}$")) -> {
+                                    snackbarHostState.showSnackbar("⚠️ Số điện thoại phải là 10 chữ số")
+                                }
+                                password.length < 6 -> {
+                                    snackbarHostState.showSnackbar("⚠️ Mật khẩu phải có ít nhất 6 ký tự")
+                                }
+                                password != confirmPassword -> {
+                                    snackbarHostState.showSnackbar("⚠️ Mật khẩu không khớp")
+                                }
+                                userPrefs.isUserExists(username) -> {
+                                    snackbarHostState.showSnackbar("⚠️ Tên đăng nhập đã tồn tại")
+                                }
+                                else -> {
+                                    userPrefs.saveUser(username, password, fullName, phone)
+                                    snackbarHostState.showSnackbar("🎉 Đăng ký thành công! Vui lòng đăng nhập.")
+                                    navController.navigate("login_screen") {
+                                        popUpTo("register_screen") { inclusive = true }
+                                    }
                                 }
                             }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = LoginColors.PrimaryGreen),
-                shape = RoundedCornerShape(12.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-            ) {
-                Text("ĐĂNG KÝ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = LoginColors.PrimaryGreen),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
+                    Text("ĐĂNG KÝ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
 
-            if (message.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = message,
-                    color = if (message.startsWith("✅")) LoginColors.PrimaryGreen else Color.Red,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Đã có tài khoản? ", color = Color.Gray, fontSize = 16.sp)
-                Text(
-                    text = "Đăng nhập ngay",
-                    color = LoginColors.AccentBlue,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { navController.popBackStack() }
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Đã có tài khoản? ", color = Color.Gray, fontSize = 16.sp)
+                    Text(
+                        text = "Đăng nhập ngay",
+                        color = LoginColors.AccentBlue,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { navController.popBackStack() }
+                    )
+                }
             }
         }
     }
