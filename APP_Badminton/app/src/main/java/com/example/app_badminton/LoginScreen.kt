@@ -45,7 +45,15 @@ fun LoginScreen(navController: NavController) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var rememberMe by remember { mutableStateOf(true) }
 
+    LaunchedEffect(Unit) {
+        if (userPrefs.isLoggedIn()) {
+            navController.navigate("home_screen") {
+                popUpTo("login_screen") { inclusive = true }
+            }
+        }
+    }
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize()
@@ -142,6 +150,18 @@ fun LoginScreen(navController: NavController) {
                     )
                 }
 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Checkbox(
+                        checked = rememberMe,
+                        onCheckedChange = { rememberMe = it },
+                        colors = CheckboxDefaults.colors(checkedColor = LoginScreenColors.AccentBlue)
+                    )
+                    Text("Ghi nhớ đăng nhập", color = Color.Gray)
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Nút đăng nhập
@@ -155,6 +175,7 @@ fun LoginScreen(navController: NavController) {
 
                                 userPrefs.validateUser(username, password) -> {
                                     snackbarHostState.showSnackbar("✅ Đăng nhập thành công!")
+                                    if (rememberMe) userPrefs.setLoggedInUser(username)
                                     navController.navigate("home_screen") {
                                         popUpTo("login_screen") { inclusive = true }
                                     }

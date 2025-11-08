@@ -69,6 +69,12 @@ class UserPreferences(private val context: Context) {
             prefs[LOGGED_USER_KEY] = username.trim()
         }
     }
+    suspend fun isLoggedIn(): Boolean {
+        val loggedUser = context.dataStore.data.map { it[LOGGED_USER_KEY] }.first()
+        return !loggedUser.isNullOrEmpty()
+    }
+
+    // ✅ Xoá user đăng nhập (khi nhấn Đăng xuất)
 
     /**
      * ✅ Cập nhật thông tin hồ sơ người dùng
