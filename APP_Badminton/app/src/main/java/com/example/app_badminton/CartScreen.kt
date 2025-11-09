@@ -50,6 +50,11 @@ import com.example.app_badminton.data.CartItem
 import com.example.app_badminton.data.CartPreferences
 import com.example.app_badminton.navigation.BottomNavItem
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.BorderStroke
+
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.graphics.SolidColor
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -170,6 +175,17 @@ fun CartScreen(navController: NavController) {
                         ) {
                             Text("Thanh toán", fontSize = 18.sp, color = Color.White)
                         }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = { navController.navigate("booking_history") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            border = ButtonDefaults.outlinedButtonBorder, // bản Material3 mới không cần SolidColor
+                        ) {
+                            Text("Xem lịch sử đặt sân", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        }
+
                     }
                 }
             }

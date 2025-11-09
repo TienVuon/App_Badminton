@@ -45,7 +45,13 @@ fun AppNavGraph() {
             composable("home_screen") { HomeScreen(navController = navController) }
             composable("cart_screen") { CartScreen(navController = navController) }
             composable("profile_screen") { ProfileScreen(navController = navController) }
+            composable("booking_history") {
+                BookingHistoryScreen(navController)
+            }
             composable("booking_screen") { BookingScreen(navController = navController) }
+            composable("payment") {
+                PaymentScreen(navController)
+            }
 
             // Gọi Composable Service Screen chính
             composable("service_screen") { ServiceScreen(navController = navController) }
