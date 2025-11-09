@@ -1,6 +1,7 @@
 package com.example.app_badminton
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.app_badminton.data.BookingPreferences
 import com.example.app_badminton.data.CartPreferences
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -68,8 +69,11 @@ fun CourtBookingDetailScreen(
         "19:00-20:00", "20:00-21:00", "21:00-22:00"
     )
 
-    // Load danh sách giờ đã được đặt (đã thanh toán)
+    // ✅ Load danh sách giờ đã được đặt (ngay khi mở và khi đổi ngày)
     LaunchedEffect(currentViewingDate) {
+        bookedSlots = bookingPrefs.getBookedSlots(courtName, currentViewingDate)
+    }
+    LaunchedEffect(Unit) {
         bookedSlots = bookingPrefs.getBookedSlots(courtName, currentViewingDate)
     }
 
@@ -187,7 +191,7 @@ fun CourtBookingDetailScreen(
             }
         }
 
-        // Vị trí hiển thị Snackbar
+        // 📢 Snackbar hiển thị kết quả
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -216,10 +220,8 @@ fun CourtBookingDetailScreen(
                     showConfirmDialog = false
                     selectedBookings = emptyMap()
 
-                    // 🎉 Hiển thị thông báo SnackBar thành công
                     snackbarHostState.showSnackbar("✅ Đã thêm vào giỏ hàng thành công!")
-
-                    // Cập nhật lại danh sách giờ đã đặt (chỉ những cái đã thanh toán)
+                    delay(300) // giúp Snackbar hiển thị rõ trước khi refresh
                     bookedSlots = bookingPrefs.getBookedSlots(courtName, currentViewingDate)
                 }
             },
@@ -229,7 +231,7 @@ fun CourtBookingDetailScreen(
 }
 
 /* -------------------------------
-   🔹 Các hàm phụ trợ
+   🔹 Hàm hỗ trợ: Ngày
 --------------------------------*/
 data class DateItem(val displayDay: String, val displayDate: String, val formatted: String)
 
@@ -263,7 +265,7 @@ fun getTodayDateFormatted(): String {
 }
 
 /* -------------------------------
-   🔹 UI: Chọn ngày
+   🔹 UI: Ngày & Giờ
 --------------------------------*/
 @Composable
 fun DateChip(
@@ -298,9 +300,6 @@ fun DateChip(
     }
 }
 
-/* -------------------------------
-   🔹 UI: Chọn khung giờ
---------------------------------*/
 @Composable
 fun TimeSlotChip(slot: String, isBooked: Boolean, isSelected: Boolean, onClick: () -> Unit) {
     val backgroundColor = when {
@@ -308,8 +307,10 @@ fun TimeSlotChip(slot: String, isBooked: Boolean, isSelected: Boolean, onClick: 
         isSelected -> ThemeColors.SelectedTimeColor
         else -> ThemeColors.FreeTimeColor
     }
-    val contentColor = if (isBooked) Color.Gray else if (isSelected) Color.White else ThemeColors.DarkTextColor
-    val borderColor = if (isSelected) ThemeColors.SelectedTimeColor else ThemeColors.BorderColor
+    val contentColor =
+        if (isBooked) Color.Gray else if (isSelected) Color.White else ThemeColors.DarkTextColor
+    val borderColor =
+        if (isSelected) ThemeColors.SelectedTimeColor else ThemeColors.BorderColor
 
     Box(
         modifier = Modifier
@@ -365,14 +366,11 @@ fun BookingConfirmDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = ThemeColors.PrimaryGreen)) {
-                Text("Xác nhận")
-            }
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeColors.PrimaryGreen)
+            ) { Text("Xác nhận") }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Hủy")
-            }
-        }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Hủy") } }
     )
 }

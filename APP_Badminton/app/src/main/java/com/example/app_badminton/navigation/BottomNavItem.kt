@@ -1,52 +1,21 @@
 package com.example.app_badminton.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocalActivity
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
-/**
- * Danh sách các nút trong thanh điều hướng dưới (Bottom Navigation)
- */
 sealed class BottomNavItem(
-    val route: String,
     val title: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val route: String
 ) {
-    // ✅ FIX: Thay thế TODO() bằng cách trả về title, tránh lỗi NotImplementedError
-    val label: String
-        get() = title
+    object Home : BottomNavItem("Trang chủ", Icons.Default.Home, "home_screen")
+    object Booking : BottomNavItem("Đặt sân", Icons.Default.DateRange, "booking_screen")
+    object Cart : BottomNavItem("Giỏ hàng", Icons.Default.ShoppingCart, "cart_screen")
+    object Profile : BottomNavItem("Hồ sơ", Icons.Default.Person, "profile_screen")
 
-    object Home : BottomNavItem(
-        route = "home_screen",
-        title = "Trang chủ",
-        icon = Icons.Outlined.Home
-    )
+    // ✅ Thêm mục Lịch sử nếu muốn hiển thị trong thanh điều hướng
+    object History : BottomNavItem("Lịch sử", Icons.Default.History, "booking_history")
+    object Service : BottomNavItem("Dịch vụ", Icons.Default.Build, "service_screen")
 
-    object Booking : BottomNavItem(
-        route = "booking_screen",
-        title = "Đặt lịch",
-        icon = Icons.Outlined.CalendarMonth
-    )
-
-    object Service : BottomNavItem(
-        route = "service_screen",
-        title = "Dịch vụ",
-        icon = Icons.Filled.LocalActivity
-    )
-
-    object Cart : BottomNavItem(
-        route = "cart_screen",
-        title = "Giỏ hàng",
-        icon = Icons.Outlined.ShoppingCart
-    )
-
-    object Profile : BottomNavItem(
-        route = "profile_screen",
-        title = "Tài khoản",
-        icon = Icons.Outlined.Person
-    )
 }

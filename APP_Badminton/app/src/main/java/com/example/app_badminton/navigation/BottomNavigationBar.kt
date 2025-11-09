@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 
+
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
@@ -63,7 +64,7 @@ fun BottomNavigationBar(navController: NavController) {
                 },
                 label = {
                     Text(
-                        item.label,
+                        item.title,
                         fontSize = MaterialTheme.typography.labelSmall.fontSize,
                         color = if (selected) SelectedColor else UnselectedColor
                     )

@@ -16,6 +16,7 @@ import androidx.navigation.NavController
 import com.example.app_badminton.data.BookingPreferences
 import com.example.app_badminton.data.CartPreferences
 import com.example.app_badminton.data.CartItem
+import com.example.app_badminton.data.BookingHistoryPreferences
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,14 +25,14 @@ fun PaymentScreen(navController: NavController) {
     val context = LocalContext.current
     val bookingPrefs = remember { BookingPreferences(context) }
     val cartPrefs = remember { CartPreferences(context) }
-    val historyPrefs = remember { com.example.app_badminton.data.BookingHistoryPreferences(context) }
+    val historyPrefs = remember { BookingHistoryPreferences(context) }
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     var cartItems by remember { mutableStateOf(listOf<CartItem>()) }
     var showConfirmDialog by remember { mutableStateOf(false) }
 
-    // ✅ Load danh sách từ SharedPreferences trong coroutine
+    // ✅ Load danh sách từ DataStore (giỏ hàng)
     LaunchedEffect(Unit) {
         cartItems = cartPrefs.getCartItems()
     }
@@ -105,7 +106,7 @@ fun PaymentScreen(navController: NavController) {
         }
     }
 
-    // 🔐 Xác nhận thanh toán
+    // 🔐 Xác nhận thanh toán (hiện hộp thoại)
     if (showConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmDialog = false },
@@ -119,12 +120,28 @@ fun PaymentScreen(navController: NavController) {
             confirmButton = {
                 Button(onClick = {
                     scope.launch {
-                        val cartItems = cartPrefs.getCartItems()       // suspend -> gọi trong coroutine
+                        val cartItems = cartPrefs.getCartItems()
                         if (cartItems.isNotEmpty()) {
-                            historyPrefs.appendFromCartItems(cartItems) // ✅ ghi lịch sử
-                            cartPrefs.clearCart()                       // ✅ dọn giỏ
-                            snackbarHostState.showSnackbar("Thanh toán thành công! Đã lưu vào Lịch sử đặt sân.")
-                            // Điều hướng sang màn lịch sử để xem ngay:
+
+                            // ✅ Ghi lịch sử đặt sân
+                            historyPrefs.appendFromCartItems(cartItems)
+
+                            // ✅ Đánh dấu sân đã thanh toán là "đã đặt"
+                            cartItems.forEach { item ->
+                                bookingPrefs.markSlotsAsBooked(
+                                    court = item.court,
+                                    date = item.date,
+                                    times = listOf(item.time)
+                                )
+                            }
+
+                            // ✅ Dọn giỏ hàng sau khi thanh toán
+                            cartPrefs.clearCart()
+
+                            // ✅ Hiển thị thông báo
+                            snackbarHostState.showSnackbar("✅ Thanh toán thành công! Đã lưu vào Lịch sử đặt sân.")
+
+                            // ✅ Điều hướng sang màn hình lịch sử
                             navController.navigate("booking_history") {
                                 popUpTo("payment") { inclusive = true }
                             }

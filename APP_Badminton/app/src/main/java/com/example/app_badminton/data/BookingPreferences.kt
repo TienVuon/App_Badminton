@@ -17,7 +17,7 @@ class BookingPreferences(private val context: Context) {
         private val BOOKINGS_KEY = stringPreferencesKey("booked_slots")
     }
 
-    // ✅ Lưu khung giờ đã được đặt
+    // ✅ Lưu khung giờ khi người dùng tạm đặt (trong giỏ)
     suspend fun saveBooking(court: String, date: String, time: String) {
         context.bookingDataStore.edit { prefs ->
             val existing = prefs[BOOKINGS_KEY] ?: "[]"
@@ -27,6 +27,7 @@ class BookingPreferences(private val context: Context) {
                 put("court", court)
                 put("date", date)
                 put("time", time)
+                put("status", "TEMP") // tạm giữ (chưa thanh toán)
             }
 
             jsonArray.put(booking)
@@ -34,7 +35,7 @@ class BookingPreferences(private val context: Context) {
         }
     }
 
-    // ✅ Lấy danh sách khung giờ đã được đặt
+    // ✅ Lấy danh sách khung giờ đã được đặt (đã thanh toán hoặc tạm)
     suspend fun getBookedSlots(court: String, date: String): List<String> {
         val jsonText = context.bookingDataStore.data.map { it[BOOKINGS_KEY] ?: "[]" }.first()
         val jsonArray = JSONArray(jsonText)
@@ -47,5 +48,44 @@ class BookingPreferences(private val context: Context) {
             }
         }
         return list
+    }
+
+    // ✅ Đánh dấu các slot đã thanh toán là "booked" vĩnh viễn
+    suspend fun markSlotsAsBooked(court: String, date: String, times: List<String>) {
+        context.bookingDataStore.edit { prefs ->
+            val existing = prefs[BOOKINGS_KEY] ?: "[]"
+            val jsonArray = JSONArray(existing)
+
+            // Nếu slot đã tồn tại trong danh sách, bỏ qua để tránh duplicate
+            val existingList = mutableListOf<JSONObject>()
+            for (i in 0 until jsonArray.length()) {
+                existingList.add(jsonArray.getJSONObject(i))
+            }
+
+            times.forEach { time ->
+                val alreadyExists = existingList.any {
+                    it.getString("court") == court &&
+                            it.getString("date") == date &&
+                            it.getString("time") == time
+                }
+
+                if (!alreadyExists) {
+                    val booking = JSONObject().apply {
+                        put("court", court)
+                        put("date", date)
+                        put("time", time)
+                        put("status", "BOOKED")
+                    }
+                    jsonArray.put(booking)
+                }
+            }
+
+            prefs[BOOKINGS_KEY] = jsonArray.toString()
+        }
+    }
+
+    // ✅ (tuỳ chọn) Xóa toàn bộ dữ liệu đặt sân
+    suspend fun clearAllBookings() {
+        context.bookingDataStore.edit { it.remove(BOOKINGS_KEY) }
     }
 }

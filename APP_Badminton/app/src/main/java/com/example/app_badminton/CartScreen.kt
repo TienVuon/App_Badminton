@@ -199,7 +199,10 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem.Home,
         BottomNavItem.Booking,
         BottomNavItem.Cart,
-        BottomNavItem.Profile
+        BottomNavItem.Profile,
+        BottomNavItem.History
+
+
     )
 
     NavigationBar(containerColor = Color.White) {
@@ -216,20 +219,17 @@ fun BottomNavigationBar(navController: NavController) {
                 icon = {
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.label,
+                        contentDescription = item.title,
                         tint = if (currentRoute == item.route)
                             Color(0xFF009688) else Color.Gray
                     )
                 },
                 label = {
-                    item.label?.let {
-                        Text(
-                            text = it,
-                            fontSize = 12.sp,
-                            color = if (currentRoute == item.route)
-                                Color(0xFF009688) else Color.Gray
-                        )
-                    }
+                    Text(
+                        text = item.title,
+                        fontSize = 12.sp,
+                        color = if (currentRoute == item.route)
+                            Color(0xFF009688) else Color.Gray)
                 }
             )
         }
