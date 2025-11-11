@@ -1,5 +1,6 @@
 package com.example.app_badminton
 
+import androidx.compose.foundation.Image // ✅ Import Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,20 +11,29 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale // ✅ Import ContentScale
+import androidx.compose.ui.res.painterResource // ✅ Import painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.app_badminton.ServiceTheme // ✅ Import ServiceTheme
-import com.example.app_badminton.ServiceItem // ✅ Import ServiceItem
+import com.example.app_badminton.ServiceItem // ✅ Import ServiceItem (Đảm bảo ServiceItem đã có imageResId)
 
 // --- DỮ LIỆU MOCK ---
 fun getDrinksData(): List<ServiceItem> {
     return listOf(
-        ServiceItem("Nước lọc Aquafina", "Bổ sung nước, cần thiết cho mọi hoạt động.", 10000, 5.0),
-        ServiceItem("Nước tăng lực Sting", "Tăng cường năng lượng tức thời.", 15000, 4.3),
-        ServiceItem("Trà chanh không độ", "Giải khát, giải nhiệt cơ thể.", 18000, 4.6),
-        ServiceItem("Coca Cola", "Đồ uống có gas giải khát.", 15000, 4.1)
+        // ✅ CẬP NHẬT: Thêm imageResId cho mỗi ServiceItem
+        ServiceItem("Nước lọc Aquafina", "Bổ sung nước, cần thiết cho mọi hoạt động.", 10000, 5.0, R.drawable.nuocloc),
+        ServiceItem("Nước tăng lực Sting", "Tăng cường năng lượng tức thời.", 15000, 4.3, R.drawable.sting),
+        ServiceItem("Trà chanh không độ", "Giải khát, giải nhiệt cơ thể.", 18000, 4.6, R.drawable.khongdo),
+        ServiceItem("Coca Cola", "Đồ uống có gas giải khát.", 15000, 4.1, R.drawable.coca),
+        ServiceItem("Bò húc", "Tăng sức mạnh.", 15000, 4.1, R.drawable.bohuc),
+        ServiceItem("Con hổ", "Tăng tình anh em.", 15000, 4.1, R.drawable.tiger),
+        ServiceItem("Con rồng", "Giúp bạn quên đi người yêu cũ.", 15000, 4.1, R.drawable.khongdo),
+        ServiceItem("Trà đá", "Ngon bổ rẻ.", 15000, 4.1, R.drawable.trada)
     )
+
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,14 +46,12 @@ fun DrinksScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text(titleText, fontWeight = FontWeight.Bold, color = Color.White) },
-                // ✅ SỬA LỖI: Dùng Modifier.background cho Brush (Gradient)
                 modifier = Modifier.background(ServiceTheme.HeaderGradient),
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
-                // ✅ Đặt containerColor là Transparent để gradient hiển thị
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
@@ -57,6 +65,7 @@ fun DrinksScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Giả định FoodServiceItemCard đã được định nghĩa ở một file khác
+            // và nó đã được cập nhật để hiển thị hình ảnh từ item.imageResId
             items(items) { item -> FoodServiceItemCard(item = item) }
             item { Spacer(modifier = Modifier.height(50.dp)) }
         }
