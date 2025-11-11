@@ -1,5 +1,8 @@
 package com.example.app_badminton
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,10 +26,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.app_badminton.data.UserPreferences
+import androidx.compose.foundation.BorderStroke
+import com.example.app_badminton.firebase.FirebaseAuthManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import kotlinx.coroutines.launch
 
-// Màu chủ đề cho Login
+// 🎨 Màu chủ đề
 object LoginScreenColors {
     val PrimaryGreen = Color(0xFF4CAF50)
     val AccentBlue = Color(0xFF1976D2)
@@ -34,26 +39,47 @@ object LoginScreenColors {
     val CardBackground = Color.White
 }
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
-    val userPrefs = remember { UserPreferences(context) }
-    val scope = rememberCoroutineScope()
+    val authManager = remember { FirebaseAuthManager() }
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var rememberMe by remember { mutableStateOf(true) }
+    var loading by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        if (userPrefs.isLoggedIn()) {
-            navController.navigate("home_screen") {
-                popUpTo("login_screen") { inclusive = true }
+    // ⚙️ Google Sign-In launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.result
+            scope.launch {
+                val signInResult = authManager.firebaseAuthWithGoogle(account)
+                if (signInResult == "success") {
+                    snackbarHostState.showSnackbar("✅ Đăng nhập Google thành công!")
+                    navController.navigate("home_screen") {
+                        popUpTo("login_screen") { inclusive = true }
+                    }
+                } else {
+                    snackbarHostState.showSnackbar("❌ Đăng nhập Google thất bại: $signInResult")
+                }
+            }
+        } catch (e: Exception) {
+            scope.launch {
+                snackbarHostState.showSnackbar("⚠️ Lỗi đăng nhập Google: ${e.message}")
             }
         }
     }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize()
@@ -90,11 +116,11 @@ fun LoginScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Username field
+                // 📨 Email
                 OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Tên đăng nhập") },
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -107,7 +133,7 @@ fun LoginScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password field
+                // 🔒 Mật khẩu
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -134,22 +160,7 @@ fun LoginScreen(navController: NavController) {
                     )
                 )
 
-                // Quên mật khẩu
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Text(
-                        text = "Quên mật khẩu?",
-                        color = LoginScreenColors.AccentBlue,
-                        modifier = Modifier
-                            .clickable { navController.navigate("forgot_password") }
-                            .padding(end = 4.dp)
-                    )
-                }
-
+                // 🔁 Ghi nhớ
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = 8.dp)
@@ -164,26 +175,25 @@ fun LoginScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Nút đăng nhập
+                // 🚀 Nút đăng nhập Firebase (Email & Password)
                 Button(
                     onClick = {
+                        if (email.isBlank() || password.isBlank()) {
+                            scope.launch { snackbarHostState.showSnackbar("⚠️ Vui lòng nhập đủ thông tin!") }
+                            return@Button
+                        }
+
                         scope.launch {
-                            when {
-                                username.isBlank() || password.isBlank() -> {
-                                    snackbarHostState.showSnackbar("⚠️ Vui lòng nhập đủ thông tin!")
+                            loading = true
+                            val result = authManager.loginUser(email, password)
+                            loading = false
+                            if (result != null && !result.contains("Exception")) {
+                                snackbarHostState.showSnackbar("✅ Đăng nhập thành công!")
+                                navController.navigate("home_screen") {
+                                    popUpTo("login_screen") { inclusive = true }
                                 }
-
-                                userPrefs.validateUser(username, password) -> {
-                                    snackbarHostState.showSnackbar("✅ Đăng nhập thành công!")
-                                    if (rememberMe) userPrefs.setLoggedInUser(username)
-                                    navController.navigate("home_screen") {
-                                        popUpTo("login_screen") { inclusive = true }
-                                    }
-                                }
-
-                                else -> {
-                                    snackbarHostState.showSnackbar("❌ Sai tên đăng nhập hoặc mật khẩu!")
-                                }
+                            } else {
+                                snackbarHostState.showSnackbar("❌ Đăng nhập thất bại: $result")
                             }
                         }
                     },
@@ -192,14 +202,41 @@ fun LoginScreen(navController: NavController) {
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = LoginScreenColors.PrimaryGreen),
                     shape = RoundedCornerShape(12.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    enabled = !loading
                 ) {
-                    Text("ĐĂNG NHẬP", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(
+                        if (loading) "Đang đăng nhập..." else "ĐĂNG NHẬP",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 🔐 Nút đăng nhập Google
+                OutlinedButton(
+                    onClick = {
+                        val activity = context as? Activity
+                        if (activity != null) {
+                            val signInClient = authManager.getGoogleSignInClient(activity)
+                            googleSignInLauncher.launch(signInClient.signInIntent)
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = LoginScreenColors.AccentBlue),
+                    border = BorderStroke(1.dp, LoginScreenColors.AccentBlue)
+                ) {
+                    Icon(Icons.Filled.Visibility, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Đăng nhập bằng Google", fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Đăng ký
+                // 📄 Chuyển sang đăng ký
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Chưa có tài khoản? ", color = Color.Gray, fontSize = 16.sp)
                     Text(

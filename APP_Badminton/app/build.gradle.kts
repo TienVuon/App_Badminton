@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -9,7 +10,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.app_babminton"
+        applicationId = "com.example.app_badminton"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -34,11 +35,10 @@ android {
     kotlinOptions { jvmTarget = "11" }
 
     buildFeatures { compose = true }
-    buildToolsVersion = "36.0.0"
 }
 
 dependencies {
-    // Compose core
+    // --- Compose core ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -47,23 +47,28 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.datastore.core)
-    implementation(libs.generativeai)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // --- Firebase (sửa đúng chuẩn BOM) ---
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-analytics")
+
+    // --- Google Sign-In ---
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // --- Khác ---
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("io.coil-kt:coil-compose:2.6.0")
-    // Bộ icon mở rộng (Outlined, Rounded, Sharp…)
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.compose.material:material-icons-extended")
 
-
-
-    // Navigation Compose (ổn định với BOM 2024.09.00)
+    // --- Navigation ---
     implementation("androidx.navigation:navigation-compose:2.8.3")
-    // Test
+
+    // --- Test ---
     testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 }

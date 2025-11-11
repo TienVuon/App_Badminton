@@ -23,32 +23,31 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.app_badminton.data.UserPreferences
+import com.example.app_badminton.firebase.FirebaseAuthManager
 import kotlinx.coroutines.launch
 
-// --- MÀU CHỦ ĐỀ ---
-object LoginColors {
+// 🎨 Màu chủ đề
+object RegisterColors {
     val PrimaryGreen = Color(0xFF4CAF50)
     val AccentBlue = Color(0xFF1976D2)
     val LightBackground = Color(0xFFF5F5F5)
     val CardBackground = Color.White
-    val ShadowColor = Color(0x33000000)
     val DarkTextColor = Color(0xFF212121)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(navController: NavController) {
-    val context = LocalContext.current
-    val userPrefs = remember { UserPreferences(context) }
-    val scope = rememberCoroutineScope()
+    val authManager = remember { FirebaseAuthManager() }
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var fullName by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -58,7 +57,7 @@ fun RegisterScreen(navController: NavController) {
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .background(LoginColors.LightBackground),
+                .background(RegisterColors.LightBackground),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -67,7 +66,7 @@ fun RegisterScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(LoginColors.CardBackground)
+                    .background(RegisterColors.CardBackground)
                     .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                     .padding(24.dp)
             ) {
@@ -75,7 +74,7 @@ fun RegisterScreen(navController: NavController) {
                     text = "BADMINTON UTH",
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = LoginColors.PrimaryGreen
+                    color = RegisterColors.PrimaryGreen
                 )
                 Text(
                     text = "TẠO TÀI KHOẢN MỚI",
@@ -86,8 +85,6 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                StyledOutlinedTextField(value = username, onValueChange = { username = it }, label = "Tên đăng nhập")
-                Spacer(modifier = Modifier.height(12.dp))
                 StyledOutlinedTextField(value = fullName, onValueChange = { fullName = it }, label = "Họ và tên")
                 Spacer(modifier = Modifier.height(12.dp))
                 StyledOutlinedTextField(
@@ -99,7 +96,8 @@ fun RegisterScreen(navController: NavController) {
                     keyboardType = KeyboardType.Phone
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-
+                StyledOutlinedTextField(value = email, onValueChange = { email = it }, label = "Email")
+                Spacer(modifier = Modifier.height(12.dp))
                 StyledOutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -116,15 +114,16 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // ✅ Nút đăng ký Firebase
                 Button(
                     onClick = {
                         scope.launch {
                             when {
-                                username.isBlank() || password.isBlank() || fullName.isBlank() || phone.isBlank() -> {
+                                fullName.isBlank() || phone.isBlank() || email.isBlank() || password.isBlank() -> {
                                     snackbarHostState.showSnackbar("⚠️ Vui lòng nhập đầy đủ thông tin")
                                 }
                                 !phone.matches(Regex("^\\d{10}$")) -> {
-                                    snackbarHostState.showSnackbar("⚠️ Số điện thoại phải là 10 chữ số")
+                                    snackbarHostState.showSnackbar("⚠️ Số điện thoại phải gồm 10 chữ số")
                                 }
                                 password.length < 6 -> {
                                     snackbarHostState.showSnackbar("⚠️ Mật khẩu phải có ít nhất 6 ký tự")
@@ -132,14 +131,17 @@ fun RegisterScreen(navController: NavController) {
                                 password != confirmPassword -> {
                                     snackbarHostState.showSnackbar("⚠️ Mật khẩu không khớp")
                                 }
-                                userPrefs.isUserExists(username) -> {
-                                    snackbarHostState.showSnackbar("⚠️ Tên đăng nhập đã tồn tại")
-                                }
                                 else -> {
-                                    userPrefs.saveUser(username, password, fullName, phone)
-                                    snackbarHostState.showSnackbar("🎉 Đăng ký thành công! Vui lòng đăng nhập.")
-                                    navController.navigate("login_screen") {
-                                        popUpTo("register_screen") { inclusive = true }
+                                    loading = true
+                                    val result = authManager.registerUser(email, password)
+                                    loading = false
+                                    if (result != null && !result.contains("Exception")) {
+                                        snackbarHostState.showSnackbar("🎉 Đăng ký thành công! Vui lòng đăng nhập.")
+                                        navController.navigate("login_screen") {
+                                            popUpTo("register_screen") { inclusive = true }
+                                        }
+                                    } else {
+                                        snackbarHostState.showSnackbar("❌ Đăng ký thất bại: $result")
                                     }
                                 }
                             }
@@ -148,11 +150,15 @@ fun RegisterScreen(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = LoginColors.PrimaryGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = RegisterColors.PrimaryGreen),
                     shape = RoundedCornerShape(12.dp),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                    enabled = !loading
                 ) {
-                    Text("ĐĂNG KÝ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(
+                        if (loading) "Đang tạo tài khoản..." else "ĐĂNG KÝ",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -161,7 +167,7 @@ fun RegisterScreen(navController: NavController) {
                     Text("Đã có tài khoản? ", color = Color.Gray, fontSize = 16.sp)
                     Text(
                         text = "Đăng nhập ngay",
-                        color = LoginColors.AccentBlue,
+                        color = RegisterColors.AccentBlue,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { navController.popBackStack() }
@@ -200,16 +206,16 @@ fun StyledOutlinedTextField(
                 val description = if (passwordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu"
 
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = image, contentDescription = description, tint = LoginColors.AccentBlue)
+                    Icon(imageVector = image, contentDescription = description, tint = RegisterColors.AccentBlue)
                 }
             }
         },
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = LoginColors.AccentBlue,
+            focusedBorderColor = RegisterColors.AccentBlue,
             unfocusedBorderColor = Color.LightGray,
-            focusedLabelColor = LoginColors.AccentBlue,
+            focusedLabelColor = RegisterColors.AccentBlue,
             unfocusedLabelColor = Color.Gray
         ),
-        textStyle = LocalTextStyle.current.copy(color = LoginColors.DarkTextColor)
+        textStyle = LocalTextStyle.current.copy(color = RegisterColors.DarkTextColor)
     )
 }
